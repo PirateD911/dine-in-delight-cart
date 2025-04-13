@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Table,
@@ -18,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Search, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Search, CheckCircle, XCircle, FileText, X } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -36,7 +35,6 @@ interface Order {
   customerPhone: string;
 }
 
-// Dummy orders data (will be replaced with Supabase data)
 const dummyOrders: Order[] = [
   {
     id: 'ORD-001',
@@ -66,7 +64,6 @@ const dummyOrders: Order[] = [
   }
 ];
 
-// Exchange rate: 1 USD = 75 INR
 const USD_TO_INR = 75;
 
 const OrderManager = () => {
@@ -77,16 +74,13 @@ const OrderManager = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  // Filter orders when filter or search changes
   useEffect(() => {
     let filtered = [...orders];
     
-    // Apply status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(order => order.status === statusFilter);
     }
     
-    // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(order => 
         order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -96,13 +90,11 @@ const OrderManager = () => {
       );
     }
     
-    // Sort by date (newest first)
     filtered.sort((a, b) => b.date.getTime() - a.date.getTime());
     
     setFilteredOrders(filtered);
   }, [orders, statusFilter, searchQuery]);
 
-  // Update order status
   const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
     setOrders(orders.map(order => {
       if (order.id === orderId) {
@@ -114,7 +106,6 @@ const OrderManager = () => {
     toast.success(`Order ${orderId} status updated to ${newStatus}`);
   };
 
-  // View order details
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setIsViewModalOpen(true);
@@ -129,7 +120,6 @@ const OrderManager = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-grow">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -157,7 +147,6 @@ const OrderManager = () => {
         </Select>
       </div>
 
-      {/* Orders Table */}
       <div className="bg-white rounded-md shadow overflow-hidden">
         <Table>
           <TableHeader>
@@ -253,7 +242,6 @@ const OrderManager = () => {
         </Table>
       </div>
 
-      {/* Order Details Modal */}
       {selectedOrder && isViewModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
