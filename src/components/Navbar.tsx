@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Menu, X, User } from 'lucide-react';
+import { ShoppingCart, Menu, X } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 
 export const Navbar = () => {
@@ -19,6 +19,24 @@ export const Navbar = () => {
     const tableNumber = localStorage.getItem("selectedTable");
     setSelectedTable(tableNumber);
   }, []);
+
+  // Show simplified header when no table is selected and on home page
+  const isHome = window.location.pathname === '/';
+  const showSimplifiedHeader = isHome && !selectedTable;
+
+  if (showSimplifiedHeader) {
+    return (
+      <header className="fixed w-full z-50 bg-transparent">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center h-16 items-center">
+            <div className="flex-shrink-0 flex items-center">
+              <span className="font-serif text-2xl font-bold text-white">Dine<span className="text-restaurant-primary">Delight</span></span>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="fixed w-full z-50 bg-white shadow-sm">
@@ -59,9 +77,9 @@ export const Navbar = () => {
                 variant="default" 
                 asChild 
                 className="bg-restaurant-primary hover:bg-restaurant-primary/90"
-                onClick={() => navigate('/#select-table')}
+                onClick={() => navigate('/')}
               >
-                <Link to="/#select-table">Select Table</Link>
+                <Link to="/">Select Table</Link>
               </Button>
             ) : (
               <Button 
@@ -124,10 +142,10 @@ export const Navbar = () => {
                 className="w-full bg-restaurant-primary hover:bg-restaurant-primary/90"
                 onClick={() => {
                   closeMenu();
-                  navigate('/#select-table');
+                  navigate('/');
                 }}
               >
-                <Link to="/#select-table">Select Table</Link>
+                <Link to="/">Select Table</Link>
               </Button>
             ) : (
               <Button 
