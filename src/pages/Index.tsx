@@ -1,15 +1,19 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, CalendarDays, Star, Users, Clock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, CalendarDays, Star, Users, Clock, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { menuItems } from '@/data/menu-data';
 import { useCart } from '@/hooks/use-cart';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 const Index = () => {
   const { addItem } = useCart();
   const [currentHeroImage, setCurrentHeroImage] = useState(0);
+  const [tableNumber, setTableNumber] = useState('');
+  const navigate = useNavigate();
   
   const featuredDishes = menuItems.filter(item => 
     ["main-1", "main-3", "main-5", "dessert-1"].includes(item.id)
@@ -28,6 +32,19 @@ const Index = () => {
     
     return () => clearInterval(timer);
   }, [heroImages.length]);
+
+  const handleTableSubmit = (e) => {
+    e.preventDefault();
+    if (!tableNumber.trim()) {
+      toast.error("Please enter a table number");
+      return;
+    }
+    
+    // Save table number to local storage
+    localStorage.setItem("selectedTable", tableNumber);
+    toast.success(`Table ${tableNumber} selected! You can now order food.`);
+    navigate('/menu');
+  };
 
   return (
     <div>
@@ -55,7 +72,7 @@ const Index = () => {
               <Link to="/menu">View Menu</Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="text-white border-white hover:bg-white/10">
-              <Link to="/reservation">Reserve a Table</Link>
+              <Link to="#select-table">Select Table</Link>
             </Button>
           </div>
         </div>
@@ -157,24 +174,32 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Table Reservation CTA */}
-      <section className="py-16 bg-restaurant-dark text-white">
+      {/* Table Selection CTA */}
+      <section id="select-table" className="py-16 bg-restaurant-dark text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="md:w-1/2 mb-8 md:mb-0">
-              <Badge className="mb-2 bg-restaurant-primary/20 text-restaurant-primary hover:bg-restaurant-primary/30">Reserve Now</Badge>
+              <Badge className="mb-2 bg-restaurant-primary/20 text-restaurant-primary hover:bg-restaurant-primary/30">Select Your Table</Badge>
               <h2 className="text-3xl sm:text-4xl font-bold font-serif mb-4">
-                Book Your Table For Dining
+                Enter Your Table Number
               </h2>
               <p className="text-gray-300 mb-6 text-lg">
-                Reserve your table to experience our exceptional cuisine and service. Perfect for special occasions or a delightful everyday meal.
+                Please enter your table number to start ordering delicious food directly to your table.
               </p>
-              <Button asChild size="lg" className="bg-restaurant-primary hover:bg-restaurant-primary/90">
-                <Link to="/reservation" className="flex items-center">
-                  <CalendarDays className="mr-2 h-5 w-5" />
-                  Reserve a Table
-                </Link>
-              </Button>
+              
+              <form onSubmit={handleTableSubmit} className="flex flex-col sm:flex-row gap-3">
+                <Input 
+                  type="text" 
+                  placeholder="Enter table number" 
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                />
+                <Button type="submit" className="bg-restaurant-primary hover:bg-restaurant-primary/90 flex items-center">
+                  Go to Menu
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </form>
             </div>
             <div className="md:w-1/2 md:pl-10">
               <div className="relative">

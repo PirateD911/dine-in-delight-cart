@@ -1,15 +1,25 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { menuItems } from '@/data/menu-data';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Search } from 'lucide-react';
+import { Search, Plus, Minus } from 'lucide-react';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const Menu = () => {
-  const { addItem } = useCart();
+  const { addItem, items, updateQuantity } = useCart();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check if table is selected
+    const tableNumber = localStorage.getItem("selectedTable");
+    setSelectedTable(tableNumber);
+  }, []);
   
   const categories = [
     { id: 'starters', name: 'Starters' },
@@ -34,9 +44,24 @@ const Menu = () => {
           <h1 className="text-4xl font-bold font-serif text-restaurant-dark mb-4">
             Explore Our Menu
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Discover our carefully crafted dishes made with the finest ingredients for an unforgettable dining experience.
-          </p>
+          {selectedTable ? (
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Table <span className="font-semibold">{selectedTable}</span> - Discover our carefully crafted dishes made with the finest ingredients.
+            </p>
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 max-w-2xl mx-auto mb-6">
+              <p className="text-yellow-700">
+                You haven't selected a table yet. Please select a table to continue ordering.
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-2" 
+                onClick={() => navigate('/')}
+              >
+                Select a Table
+              </Button>
+            </div>
+          )}
         </div>
         
         {/* Search Bar */}
@@ -67,7 +92,7 @@ const Menu = () => {
           <TabsContent value="all" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredItems.map((item) => (
-                <MenuCard key={item.id} item={item} addToCart={addItem} />
+                <MenuCard key={item.id} item={item} addToCart={addItem} cartItems={items} updateQuantity={updateQuantity} />
               ))}
             </div>
           </TabsContent>
@@ -78,7 +103,13 @@ const Menu = () => {
                 {filteredItems
                   .filter((item) => item.category === category.id)
                   .map((item) => (
-                    <MenuCard key={item.id} item={item} addToCart={addItem} />
+                    <MenuCard 
+                      key={item.id} 
+                      item={item} 
+                      addToCart={addItem} 
+                      cartItems={items} 
+                      updateQuantity={updateQuantity} 
+                    />
                   ))
                 }
               </div>
@@ -93,9 +124,29 @@ const Menu = () => {
 interface MenuCardProps {
   item: typeof menuItems[0];
   addToCart: (item: Omit<import('@/hooks/use-cart').CartItem, 'quantity'>) => void;
+  cartItems: import('@/hooks/use-cart').CartItem[];
+  updateQuantity: (id: string, quantity: number) => void;
 }
 
-const MenuCard = ({ item, addToCart }: MenuCardProps) => {
+const MenuCard = ({ item, addToCart, cartItems, updateQuantity }: MenuCardProps) => {
+  // Check if the item is already in cart
+  const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
+  const quantity = cartItem?.quantity || 0;
+
+  const handleAddToCart = () => {
+    if (!localStorage.getItem("selectedTable")) {
+      toast.error("Please select a table first");
+      return;
+    }
+    
+    addToCart({
+      id: item.id, 
+      name: item.name, 
+      price: item.price,
+      image: item.image
+    });
+  };
+
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md menu-card-hover">
       <div className="h-48 overflow-hidden">
@@ -110,18 +161,32 @@ const MenuCard = ({ item, addToCart }: MenuCardProps) => {
         <p className="text-gray-600 text-sm mb-4">{item.description}</p>
         <div className="flex items-center justify-between">
           <span className="text-restaurant-primary font-medium">${item.price.toFixed(2)}</span>
-          <Button 
-            onClick={() => 
-              addToCart({
-                id: item.id, 
-                name: item.name, 
-                price: item.price,
-                image: item.image
-              })
-            }
-          >
-            Add to Cart
-          </Button>
+          
+          {quantity === 0 ? (
+            <Button onClick={handleAddToCart}>
+              Add to Cart
+            </Button>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Button 
+                size="icon" 
+                variant="outline" 
+                className="h-8 w-8 rounded-full"
+                onClick={() => updateQuantity(item.id, quantity - 1)}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="font-medium w-6 text-center">{quantity}</span>
+              <Button 
+                size="icon" 
+                variant="outline"
+                className="h-8 w-8 rounded-full bg-restaurant-primary text-white border-restaurant-primary hover:bg-restaurant-primary/90"
+                onClick={() => updateQuantity(item.id, quantity + 1)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

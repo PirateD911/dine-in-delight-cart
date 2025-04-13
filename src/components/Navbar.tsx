@@ -1,16 +1,24 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Menu, X, User } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const { items } = useCart();
+  const navigate = useNavigate();
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
+
+  useEffect(() => {
+    // Check if table is selected
+    const tableNumber = localStorage.getItem("selectedTable");
+    setSelectedTable(tableNumber);
+  }, []);
 
   return (
     <header className="fixed w-full z-50 bg-white shadow-sm">
@@ -26,8 +34,13 @@ export const Navbar = () => {
           <nav className="hidden md:flex space-x-8">
             <Link to="/" className="font-medium text-gray-600 hover:text-restaurant-primary transition-colors">Home</Link>
             <Link to="/menu" className="font-medium text-gray-600 hover:text-restaurant-primary transition-colors">Menu</Link>
-            <Link to="/reservation" className="font-medium text-gray-600 hover:text-restaurant-primary transition-colors">Reserve Table</Link>
             <Link to="/about" className="font-medium text-gray-600 hover:text-restaurant-primary transition-colors">About</Link>
+            
+            {selectedTable && (
+              <div className="font-medium text-restaurant-primary">
+                Table: {selectedTable}
+              </div>
+            )}
           </nav>
           
           <div className="hidden md:flex items-center space-x-4">
@@ -41,9 +54,27 @@ export const Navbar = () => {
                 )}
               </Button>
             </Link>
-            <Button variant="default" asChild className="bg-restaurant-primary hover:bg-restaurant-primary/90">
-              <Link to="/reservation">Reserve a Table</Link>
-            </Button>
+            {!selectedTable ? (
+              <Button 
+                variant="default" 
+                asChild 
+                className="bg-restaurant-primary hover:bg-restaurant-primary/90"
+                onClick={() => navigate('/#select-table')}
+              >
+                <Link to="/#select-table">Select Table</Link>
+              </Button>
+            ) : (
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  localStorage.removeItem("selectedTable");
+                  setSelectedTable(null);
+                  window.location.reload();
+                }}
+              >
+                Change Table
+              </Button>
+            )}
           </div>
           
           {/* Mobile menu button */}
@@ -77,12 +108,41 @@ export const Navbar = () => {
         <div className="pt-2 pb-4 space-y-1 bg-white shadow-lg">
           <Link to="/" onClick={closeMenu} className="block px-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Home</Link>
           <Link to="/menu" onClick={closeMenu} className="block px-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Menu</Link>
-          <Link to="/reservation" onClick={closeMenu} className="block px-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">Reserve Table</Link>
           <Link to="/about" onClick={closeMenu} className="block px-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50">About</Link>
+          
+          {selectedTable && (
+            <div className="px-4 py-2 text-base font-medium text-restaurant-primary">
+              Table: {selectedTable}
+            </div>
+          )}
+          
           <div className="px-4 py-3">
-            <Button variant="default" asChild className="w-full bg-restaurant-primary hover:bg-restaurant-primary/90">
-              <Link to="/reservation" onClick={closeMenu}>Reserve a Table</Link>
-            </Button>
+            {!selectedTable ? (
+              <Button 
+                variant="default" 
+                asChild 
+                className="w-full bg-restaurant-primary hover:bg-restaurant-primary/90"
+                onClick={() => {
+                  closeMenu();
+                  navigate('/#select-table');
+                }}
+              >
+                <Link to="/#select-table">Select Table</Link>
+              </Button>
+            ) : (
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  localStorage.removeItem("selectedTable");
+                  setSelectedTable(null);
+                  closeMenu();
+                  window.location.reload();
+                }}
+              >
+                Change Table
+              </Button>
+            )}
           </div>
         </div>
       </div>
