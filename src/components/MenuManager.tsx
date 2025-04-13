@@ -46,6 +46,7 @@ const MenuManager = () => {
   // Handle edit item
   const handleEdit = (item: MenuItem) => {
     setEditingItem({ ...item });
+    setIsAddingItem(false); // Ensure we're in edit mode, not add mode
     setIsSheetOpen(true);
   };
 
@@ -79,6 +80,7 @@ const MenuManager = () => {
   const handleSaveEdit = () => {
     if (!editingItem) return;
     
+    // Update the items array with the edited item
     setItems(items.map(item => 
       item.id === editingItem.id ? editingItem : item
     ));
@@ -98,6 +100,7 @@ const MenuManager = () => {
       category: 'starters',
     });
     setIsAddingItem(true);
+    setEditingItem(null); // Clear any editing item to avoid conflicts
     setIsSheetOpen(true);
   };
 
@@ -321,7 +324,7 @@ const MenuManager = () => {
                 <div className="flex items-center">
                   <Button
                     type="button"
-                    variant={editingItem?.isAvailable === false ? "outline" : "default"}
+                    variant={editingItem?.isAvailable !== false ? "default" : "outline"}
                     className="flex-1"
                     onClick={() => {
                       if (editingItem) {
