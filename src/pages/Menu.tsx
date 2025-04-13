@@ -5,9 +5,12 @@ import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Minus } from 'lucide-react';
+import { Search, Plus, Minus, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+
+// Exchange rate: 1 USD = 75 INR
+const USD_TO_INR = 75;
 
 const Menu = () => {
   const { addItem, items, updateQuantity } = useCart();
@@ -92,7 +95,14 @@ const Menu = () => {
           <TabsContent value="all" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredItems.map((item) => (
-                <MenuCard key={item.id} item={item} addToCart={addItem} cartItems={items} updateQuantity={updateQuantity} />
+                <MenuCard 
+                  key={item.id} 
+                  item={item} 
+                  addToCart={addItem} 
+                  cartItems={items} 
+                  updateQuantity={updateQuantity} 
+                  usdToInr={USD_TO_INR}
+                />
               ))}
             </div>
           </TabsContent>
@@ -109,6 +119,7 @@ const Menu = () => {
                       addToCart={addItem} 
                       cartItems={items} 
                       updateQuantity={updateQuantity} 
+                      usdToInr={USD_TO_INR}
                     />
                   ))
                 }
@@ -126,16 +137,23 @@ interface MenuCardProps {
   addToCart: (item: Omit<import('@/hooks/use-cart').CartItem, 'quantity'>) => void;
   cartItems: import('@/hooks/use-cart').CartItem[];
   updateQuantity: (id: string, quantity: number) => void;
+  usdToInr: number;
 }
 
-const MenuCard = ({ item, addToCart, cartItems, updateQuantity }: MenuCardProps) => {
+const MenuCard = ({ item, addToCart, cartItems, updateQuantity, usdToInr }: MenuCardProps) => {
   // Check if the item is already in cart
   const cartItem = cartItems.find(cartItem => cartItem.id === item.id);
   const quantity = cartItem?.quantity || 0;
+  const isOutOfStock = item.isAvailable === false;
 
   const handleAddToCart = () => {
     if (!localStorage.getItem("selectedTable")) {
       toast.error("Please select a table first");
+      return;
+    }
+
+    if (isOutOfStock) {
+      toast.error(`${item.name} is currently out of stock`);
       return;
     }
     
@@ -148,21 +166,33 @@ const MenuCard = ({ item, addToCart, cartItems, updateQuantity }: MenuCardProps)
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-md menu-card-hover">
-      <div className="h-48 overflow-hidden">
+    <div className={`bg-white rounded-lg overflow-hidden shadow-md menu-card-hover ${isOutOfStock ? 'opacity-75' : ''}`}>
+      <div className="h-48 overflow-hidden relative">
         <img 
           src={item.image} 
           alt={item.name} 
           className="w-full h-full object-cover"
         />
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-red-600 text-white px-3 py-1 rounded-full flex items-center gap-1 transform rotate-12">
+              <AlertCircle className="h-4 w-4" />
+              <span className="font-medium">Out of Stock</span>
+            </div>
+          </div>
+        )}
       </div>
       <div className="p-5">
         <h3 className="text-lg font-semibold mb-2">{item.name}</h3>
         <p className="text-gray-600 text-sm mb-4">{item.description}</p>
         <div className="flex items-center justify-between">
-          <span className="text-restaurant-primary font-medium">${item.price.toFixed(2)}</span>
+          <span className="text-restaurant-primary font-medium">₹{(item.price * usdToInr).toFixed(2)}</span>
           
-          {quantity === 0 ? (
+          {isOutOfStock ? (
+            <Button disabled className="opacity-60 cursor-not-allowed">
+              Out of Stock
+            </Button>
+          ) : quantity === 0 ? (
             <Button onClick={handleAddToCart}>
               Add to Cart
             </Button>

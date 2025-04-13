@@ -6,6 +6,7 @@ export interface MenuItem {
   price: number;
   image: string;
   category: 'starters' | 'mains' | 'desserts' | 'drinks';
+  isAvailable?: boolean;
 }
 
 export const menuItems: MenuItem[] = [
